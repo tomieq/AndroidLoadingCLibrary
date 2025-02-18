@@ -39,3 +39,34 @@ JNIEXPORT jint JNICALL Java_com_example_startingpoint_CAPI_staticNumber(JNIEnv *
     LOGD("staticNumber call");
     return staticNumber();
 }
+
+JNIEXPORT jint JNICALL Java_com_example_startingpoint_CAPI_sign
+  (JNIEnv *env, jobject obj, jbyteArray sArray, jbyteArray hArray, jintArray tArray) {
+    
+    // validate arguments
+    if ((*env)->GetArrayLength(env, sArray) != 64 || (*env)->GetArrayLength(env, hArray) != 32) {
+        return -1;  // error invalid size of arrays
+    }
+    // get h data from jbyteArray
+    uint8_t h[32];
+    (*env)->GetByteArrayRegion(env, hArray, 0, 32, (jbyte *)h);
+
+    
+    jsize tLength = (*env)->GetArrayLength(env, tArray);
+    // get pointer to t jintArray
+    uint32_t *t = (uint32_t *)(*env)->GetIntArrayElements(env, tArray, NULL);
+
+    // buffer for s output
+    uint8_t s[64];
+    // call the function
+    uint32_t result = sign(s, h, t);
+
+    // save the result to jbyteArray (Java)
+    (*env)->SetByteArrayRegion(env, sArray, 0, 64, (const jbyte *)s);
+
+    // release resources
+    (*env)->ReleaseIntArrayElements(env, tArray, (jint *)t, JNI_ABORT);
+
+    // return the resultt to Java
+    return (jint)result;
+}

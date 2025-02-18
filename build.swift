@@ -44,12 +44,15 @@ print(clangBin)
 sh("rm -rf jniLibs")
 
 architectures.forEach { arch in
+    print("Compiling for arch: \(arch.target)")
     sh("mkdir -p jniLibs/\(arch.folder)")
 
     // compile static library
     sh("\(clangBin) --target=\(arch.target) -c -fPIC libstatic.c -o libstatic.o")
     sh("ar rcs libstatic.a libstatic.o")
     c("ar -t libstatic.a")
+    // c("lipo -info libstatic.a") // not working for linux-elf formats
+    c("objdump -a libstatic.a | grep 'file format'") // works for linux elf
     // c("nm libstatic.a")
 
     // compile dynamic library
