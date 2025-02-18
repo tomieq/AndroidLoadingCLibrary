@@ -20,11 +20,12 @@ import android.util.Log
 class CAPI {
     companion object {
         init {
-            Log.i("CAPI", "Loading libsample")
-            System.loadLibrary("sample")
+            Log.i("CAPI", "Loading libdynamic")
+            System.loadLibrary("dynamic")
         }
     }
     external fun simple()
-    external fun getNumber(): Int
+    external fun dynamicNumber(): Int
+    external fun staticNumber(): Int
 }
 ```

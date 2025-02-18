@@ -35,6 +35,9 @@ let shell = Shell()
 @discardableResult func sh(_ command: String) -> String {
     shell.exec(command)
 }
+func c(_ command: String) {
+    print(shell.exec(command))
+}
 
 let clangBin = sh("find ~/Library/Android/sdk/ndk -type l -name \"clang\"")
 print(clangBin)
@@ -42,12 +45,25 @@ sh("rm -rf jniLibs")
 
 architectures.forEach { arch in
     sh("mkdir -p jniLibs/\(arch.folder)")
-    print(sh("\(clangBin) --target=\(arch.target) -c -fPIC sample.c -o sample.o"))
-    print(sh("\(clangBin) --target=\(arch.target) -llog sample.o -shared -o libsample.so"))
-    sh("mv libsample.so jniLibs/\(arch.folder)")
 
-    print(sh("file jniLibs/\(arch.folder)/libsample.so"))
+    // compile static library
+    sh("\(clangBin) --target=\(arch.target) -c -fPIC libstatic.c -o libstatic.o")
+    sh("ar rcs libstatic.a libstatic.o")
+    c("ar -t libstatic.a")
+    // c("nm libstatic.a")
+
+    // compile dynamic library
+    sh("\(clangBin) --target=\(arch.target) -c -fPIC libdynamic.c -o libdynamic.o")
+    sh("\(clangBin) --target=\(arch.target) -llog libdynamic.o libstatic.a -shared -o libdynamic.so")
+    c("nm libdynamic.so")
+    sh("mv libdynamic.so jniLibs/\(arch.folder)")
+    sh("rm *.o *.a")
+
+    c("file jniLibs/\(arch.folder)/libdynamic.so")
 }
 
 print(sh("tree ."))
 
+let androidProjectFolder = "/Users/tomaskuc/AndroidStudioProjects/StartingPoint/app/src/main"
+sh("rm -rf \(androidProjectFolder)/jniLibs")
+sh("cp -R jniLibs \(androidProjectFolder)")
