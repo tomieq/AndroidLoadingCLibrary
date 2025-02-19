@@ -40,7 +40,9 @@ func c(_ command: String) {
 }
 
 let clangBin = sh("find ~/Library/Android/sdk/ndk -type l -name \"clang\"")
+let arBin = clangBin.replacingOccurrences(of: "clang", with: "llvm-ar")
 print(clangBin)
+print(arBin)
 sh("rm -rf jniLibs")
 
 architectures.forEach { arch in
@@ -49,8 +51,8 @@ architectures.forEach { arch in
 
     // compile static library
     sh("\(clangBin) --target=\(arch.target) -c -fPIC libstatic.c -o libstatic.o")
-    sh("ar rcs libstatic.a libstatic.o")
-    c("ar -t libstatic.a")
+    sh("\(arBin) rcs libstatic.a libstatic.o")
+    c("\(arBin) -t libstatic.a")
     // c("lipo -info libstatic.a") // not working for linux-elf formats
     c("objdump -a libstatic.a | grep 'file format'") // works for linux elf
     // c("nm libstatic.a")
